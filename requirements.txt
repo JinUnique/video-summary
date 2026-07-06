@@ -1,0 +1,5 @@
+# Runtime dependency for scripts/transcribe_faster_whisper.py.
+faster-whisper==1.2.1
+
+# Used by scripts/install_video_summary_skill.sh to validate SKILL.md metadata.
+PyYAML>=6.0,<7.0
