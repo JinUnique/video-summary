@@ -27,4 +27,4 @@ Never commit:
 - private Feishu/Lark Wiki space IDs, document URLs, or chat identifiers;
 - raw logs that include credentials or private workspace metadata.
 
-Use `.env.example` for placeholder variable names only.
+Use `config.example.json` for destination field examples only; keep real values in ignored `config.json`.

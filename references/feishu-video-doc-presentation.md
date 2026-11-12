@@ -5,17 +5,17 @@ Use this reference when `video-summary` writes the final Feishu Wiki/Doc page. T
 When `doc/summary_assets.json` exists, generate and verify the initial reader-facing body with:
 
 ```bash
-python3 scripts/render_feishu_summary_doc.py \
+.venv/bin/python runtime/scripts/render_feishu_summary_doc.py \
   --assets runs/<run-id>/doc/summary_assets.json \
   --output runs/<run-id>/doc/feishu_summary.xml
 
-python3 scripts/validate_feishu_presentation_contract.py \
+.venv/bin/python runtime/scripts/validate_feishu_presentation_contract.py \
   --input runs/<run-id>/doc/feishu_summary.xml \
   --expected-chapters <chapter-count> \
   --expected-whiteboards <chapter-count+1>
 ```
 
-Create the document with `lark-cli docs +create --api-version v2 --parent-token <CATEGORY_PARENT_NODE_TOKEN> --content @runs/<run-id>/doc/feishu_summary.xml`. Do not use generated Markdown for the final Feishu page unless the user explicitly asks for Markdown import.
+Verify the installed CLI’s current help before adapting this upstream example: `lark-cli docs +create --api-version v2 --parent-token <CATEGORY_PARENT_NODE_TOKEN> --content @runs/<run-id>/doc/feishu_summary.xml`. Do not use generated Markdown for the final Feishu page unless the user explicitly asks for Markdown import.
 
 ## Scope Split
 

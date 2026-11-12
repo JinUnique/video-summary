@@ -192,7 +192,7 @@ Use these canonical values exactly in manifests, QA notes, or validation scripts
 
 **Recommended output structure:**
 
-For creator-production analysis deliveries, target **8,000–12,000 Chinese characters** in the reader-facing analysis body when the user wants deep craft transfer, excluding metadata, raw transcript, local agent report, and validation logs. Use the extra length for concrete craft evidence, timestamped chapter reasoning, diagrams, frame observations, reusable production methods, and prompt-transfer language; do not pad with generic praise or duplicate recap.
+For summaries delivered under the current Wiki category `视频制作分析`, target **8,000–12,000 Chinese characters** in the reader-facing analysis body, excluding metadata, raw transcript, local agent report, and validation logs. Use the extra length for concrete craft evidence, timestamped chapter reasoning, diagrams, frame observations, reusable production methods, and prompt-transfer language; do not pad with generic praise or duplicate recap.
 
 1. `摘要` — what creative problem this video solves and what technique is most transferable.
 2. `创作定位` — topic, selling point, target viewer, platform/format assumption.
@@ -458,11 +458,11 @@ Do not paste the full matrix into the final Feishu page. Use it to design the ou
 
 ## Smoke Samples
 
-The local validator `scripts/validate_video_type_strategies.py` contains representative samples for all canonical types, with at least these four release gates:
+Use these routing examples when checking the assistant’s decision; they are examples, not a bundled automatic classifier:
 
 1. Finance/knowledge hybrid → `finance_business_investment` with knowledge secondary.
 2. Social/news event → `politics_social_news`.
 3. AI-video creator breakdown → `ai_video_creation_creative_short_script`.
 4. Mixed interview/product/business creator format → `mixed_or_unknown`.
 
-The full sample set validates strategy coverage, obvious output-structure divergence, creator-learning fields, and mixed fallback behavior. It is not a replacement for real transcript QA.
+Check strategy coverage, type-specific structure, creator-learning fields, and mixed fallback against the actual transcript. The runtime validator checks evidence artifacts; it does not certify the assistant’s semantic classification.

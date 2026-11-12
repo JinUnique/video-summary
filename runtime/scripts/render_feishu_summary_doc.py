@@ -446,7 +446,62 @@ def render_chapters(assets: dict[str, Any]) -> list[str]:
     return blocks
 
 
+def render_qa_list(assets: dict[str, Any]) -> str:
+    metadata = dict_value(assets, "metadata")
+    source_url = source_url_for_assets(assets, metadata)
+    if not source_url:
+        raise SystemExit("qa_list requires a source_url")
+    supplied_groups = assets.get("qa_groups")
+    grouped = isinstance(supplied_groups, list) and bool(supplied_groups)
+    groups = supplied_groups if grouped else [{"source_url": source_url, "qa_items": assets.get("qa_items")}]
+    for group in groups:
+        if not isinstance(group, dict) or not isinstance(group.get("qa_items"), list) or not group["qa_items"]:
+            raise SystemExit("qa_list requires non-empty qa_items in every group")
+    title = assets.get("document_title") or f"{metadata.get('title') or '趣味问答'}｜问答题目"
+    source = f'<a href="{attr(source_url)}">{text(platform_label_for_source(source_url, metadata))}</a>'
+    note = str(assets.get("source_note") or "").strip()
+    source_line = f"来源：{source}｜UP：{text(owner_name(metadata))}"
+    if note:
+        source_line += f"｜{text(note)}"
+    count = sum(len(group["qa_items"]) for group in groups)
+    if grouped:
+        source_line += f"｜{len(groups)}期 · {count}题"
+    blocks = [f"<title>{text(title)}</title>", paragraph(source_line)]
+    if grouped:
+        rows = []
+        for index, group in enumerate(groups, start=1):
+            link = str(group.get("source_url") or source_url)
+            label = str(group.get("title") or f"第{index}期")
+            date = str(group.get("published_date") or "")
+            rows.append(f'<tr><td><p>{index:02d}</p></td><td><p><a href="{attr(link)}">{text(label)}</a> · {text(date)}</p></td><td><p>{len(group["qa_items"])}</p></td></tr>')
+        blocks.append('<table><colgroup><col width="60"/><col width="580"/><col width="60"/></colgroup><thead><tr><th background-color="light-gray"><p>期次</p></th><th background-color="light-gray"><p>原视频与日期</p></th><th background-color="light-gray"><p>题数</p></th></tr></thead><tbody>' + ''.join(rows) + '</tbody></table>')
+    for group_index, group in enumerate(groups, start=1):
+        link = str(group.get("source_url") or source_url)
+        if grouped:
+            label = str(group.get("title") or f"第{group_index}期")
+            date = str(group.get("published_date") or "")
+            blocks.append(f'<h2 seq="auto">{text(label)}｜{text(date)}</h2>')
+            blocks.append(paragraph(f'<a href="{attr(link)}">本期原视频</a> · {len(group["qa_items"])}题'))
+        for index, item in enumerate(group["qa_items"], start=1):
+            if not isinstance(item, dict):
+                raise SystemExit(f"qa_items[{index}] must be an object")
+            question = str(item.get("question") or "").strip()
+            answer = str(item.get("answer") or "").strip()
+            if not question or not answer:
+                raise SystemExit(f"qa_items[{index}] requires both question and answer")
+            time_link = ""
+            if item.get("start_seconds") is not None:
+                seconds = item["start_seconds"]
+                time_link = f' <a href="{attr(timestamp_url(link, seconds))}">{text(format_duration(seconds))}</a>'
+            number = f"{group_index:02d}.{index:02d}" if grouped else f"{index:02d}"
+            blocks.append(paragraph(f"<b>{number}｜Q：{text(question)}</b>{time_link}"))
+            blocks.append(paragraph(f"<b>A：</b>{text(answer)}"))
+    return '\n'.join(blocks) + '\n'
+
+
 def render_document(assets: dict[str, Any]) -> str:
+    if assets.get("presentation_profile") == "qa_list":
+        return render_qa_list(assets)
     title = title_for_assets(assets)
     blocks: list[str] = [f"<title>{text(title)}</title>"]
     blocks.extend(metadata_blocks(assets))

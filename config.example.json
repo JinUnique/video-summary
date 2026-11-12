@@ -1,0 +1,14 @@
+{
+  "feishu": {
+    "space_id": "",
+    "parent_node_token": "",
+    "identity": "user"
+  },
+  "category_profiles": {
+    "笑话与脑筋急转弯": "qa_list"
+  },
+  "category_rules": [],
+  "category_creation": {
+    "allow_broad_categories_for_requested_delivery": false
+  }
+}

@@ -1,5 +1,6 @@
-# Runtime dependency for scripts/transcribe_faster_whisper.py.
+# Tested together on Python 3.12. No hosted transcription service is required.
 faster-whisper==1.2.1
-
-# Used by scripts/install_video_summary_skill.sh to validate SKILL.md metadata.
+# faster-whisper 1.2.1 uses metadata_errors, removed by newer PyAV releases.
+av==16.1.0
+yt-dlp==2026.10.26
 PyYAML>=6.0,<7.0

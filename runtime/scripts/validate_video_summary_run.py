@@ -15,6 +15,7 @@ from validate_feishu_presentation_contract import assert_no_type_decision_sectio
 from validate_feishu_presentation_contract import assert_summary_callout
 from validate_feishu_presentation_contract import assert_top_structure
 from validate_feishu_presentation_contract import assert_visual_blocks
+from validate_feishu_presentation_contract import assert_qa_list
 
 REQUIRED_FEISHU_FILES = (
     "feishu/delivery_record.json",
@@ -199,10 +200,18 @@ def find_presentation_input(run_dir: Path, explicit_input: str) -> Path | None:
     return next((path for path in candidates if path.exists()), None)
 
 
-def validate_presentation_contract(path: Path, readback: dict[str, Any]) -> dict[str, Any]:
+def validate_presentation_contract(path: Path, readback: dict[str, Any], profile: str = "summary") -> dict[str, Any]:
     if not path.exists():
         fail(f"presentation input does not exist: {path}")
     content = load_content(path)
+    if profile == "qa_list":
+        expected_items = readback.get("qa_item_count")
+        if not isinstance(expected_items, int) or expected_items < 1:
+            fail("qa_list readback must record a positive qa_item_count")
+        expected_groups = readback.get("qa_group_count")
+        if expected_groups is not None and (not isinstance(expected_groups, int) or expected_groups < 1):
+            fail("qa_group_count must be a positive integer when present")
+        return {"ok": True, "input": str(path), **assert_qa_list(content, expected_items, expected_groups)}
     expected_chapters = readback.get("chapter_heading_count")
     if not isinstance(expected_chapters, int):
         expected_chapters = None
@@ -243,7 +252,8 @@ def validate_feishu(run_dir: Path, require_presentation_contract: bool, presenta
         if require_presentation_contract:
             fail("missing presentation input: expected feishu/fetch_result.json or doc/feishu_summary.xml")
     else:
-        result["presentation_contract"] = validate_presentation_contract(presentation_path, readback)
+        profile = "qa_list" if delivery.get("profile") == "qa_list" else "summary"
+        result["presentation_contract"] = validate_presentation_contract(presentation_path, readback, profile)
     return result
 
 

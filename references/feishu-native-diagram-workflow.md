@@ -12,13 +12,14 @@ For Feishu delivery, prefer native editable whiteboards over inserted SVG/PNG di
 
 Use SVG/PNG only as a local/offline fallback or an intermediate source for `whiteboard-cli` conversion.
 
-## Required Skills
+## Tool setup
 
-Load these before acting:
-
-1. `larksuite-cli/lark-doc` — create/update docs and insert blank whiteboard placeholders.
-2. `larksuite-cli/lark-whiteboard` — generate/update/query the whiteboard content.
-3. `larksuite-cli/lark-shared` when auth, `--as user`, or scope behavior is unclear.
+Use the user's installed official lark-cli and current help. If the official
+lark-doc/lark-whiteboard/lark-shared skills are installed, follow their relevant
+guides. They are optional external documentation, not bundled dependencies.
+Without them, use the official CLI docs/help and inspect the generated board
+before writing. The examples below are upstream workflow references, not commands
+validated by the offline installation exercise; adapt flags to the installed CLI.
 
 ## Per-Chapter Workflow
 
@@ -60,8 +61,8 @@ For each chapter, produce a small diagram spec with:
 Preferred source formats:
 
 - Mermaid only for simple mind maps, sequence diagrams, class-like relations, pie charts, or Gantt-style diagrams where Mermaid is the native best fit.
-- For polished Feishu chapter diagrams, especially process/path, comparison, timeline, fishbone, flywheel, pyramid, funnel, architecture/layer, and dense relation visuals, route through `larksuite-cli/lark-whiteboard` rather than hand-writing plain Mermaid.
-- When using `lark-whiteboard`, read the relevant scene guide plus `references/content.md`, `references/layout.md`, `references/style.md`, `references/typography.md`, and `references/connectors.md`; generate a preview PNG with `@larksuite/whiteboard-cli` before writing to Feishu.
+- For polished Feishu chapter diagrams, especially process/path, comparison, timeline, fishbone, flywheel, pyramid, funnel, architecture/layer, and dense relation visuals, use the official whiteboard tools and their current guide.
+- When the official whiteboard skill is installed, read its scene/layout guides; otherwise follow the current whiteboard CLI documentation. Generate and inspect a preview before writing to Feishu.
 - `whiteboard-cli` DSL/OpenAPI is the preferred route for richer layouts such as matrix, fishbone, flywheel, layered architecture, milestone/timeline, or dense cheat-sheet style visuals.
 
 Minimum visual bar for video chapter diagrams:

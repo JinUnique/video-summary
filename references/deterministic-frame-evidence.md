@@ -4,23 +4,23 @@ Use this reference for `video-summary` visual evidence selection. The default ev
 
 ## Decision
 
-Frame evidence and visual interpretation are separate layers. This reference governs the reproducible evidence layer: which video frames are selected, inserted, and validated. `vision_analyze`, local VLMs, or manual visual notes may help interpret selected frames later, but they do not choose the evidence frames and do not replace local QA.
+Frame evidence and visual interpretation are separate layers. This reference governs the reproducible evidence layer: which video frames are selected, inserted, and validated. assistant image inspection, local VLMs, or manual visual notes may help interpret selected frames later, but they do not choose the evidence frames and do not replace local QA.
 
 Default frame evidence selection MUST use:
 
 1. local media already downloaded for the run;
 2. chapter time ranges from `doc/summary_assets.json`, `metadata/chapters.json`, or evenly spaced fallback windows;
-3. `scripts/select_frame_evidence.py` to score candidate frames by local image statistics;
+3. `runtime/scripts/select_frame_evidence.py` to score candidate frames by local image statistics;
 4. optional local `tesseract` OCR when available;
 5. `frames/frame_evidence.json` as the source-of-truth QA manifest;
-6. `scripts/validate_video_summary_run.py --require-frame-evidence` before reporting Feishu delivery complete.
+6. `runtime/scripts/validate_video_summary_run.py --require-frame-evidence` before reporting Feishu delivery complete.
 
 Model-assisted visual review is optional only after deterministic evidence exists. If used, review small selected frame files rather than large contact sheets, and record it as supplemental visual understanding, not as the delivery gate. See `visual-understanding-routing.md`.
 
 ## Required Command
 
 ```bash
-python3 scripts/select_frame_evidence.py \
+.venv/bin/python runtime/scripts/select_frame_evidence.py \
   --run-dir runs/<run-id> \
   --candidates-per-chapter 5 \
   --ocr auto \
@@ -30,7 +30,7 @@ python3 scripts/select_frame_evidence.py \
 When chapter metadata is not ready yet, either pass an explicit JSON file:
 
 ```bash
-python3 scripts/select_frame_evidence.py \
+.venv/bin/python runtime/scripts/select_frame_evidence.py \
   --run-dir runs/<run-id> \
   --chapters runs/<run-id>/metadata/chapters.json
 ```

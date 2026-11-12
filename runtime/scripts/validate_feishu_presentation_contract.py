@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import xml.etree.ElementTree as ET
 from html import unescape
 from pathlib import Path
 from typing import Any, NoReturn
@@ -188,7 +189,10 @@ def assert_visual_blocks(content: str, expected_whiteboards: int | None) -> dict
 
 
 def assert_no_quality_leak(content: str) -> dict[str, Any]:
-    leaks = [term for term in QUALITY_TERMS if term in content]
+    # IDs and link attributes can coincidentally contain short strings like QA.
+    # Only visible document text can leak internal quality/report wording.
+    visible = text_of(content)
+    leaks = [term for term in QUALITY_TERMS if term in visible]
     if leaks:
         fail(f"reader-facing document leaks QA/report terms: {', '.join(leaks)}")
     return {"quality_terms_leaked": 0}
@@ -201,11 +205,68 @@ def assert_no_type_decision_section(content: str) -> dict[str, Any]:
     return {"type_decision_sections": 0}
 
 
+def assert_qa_list(content: str, expected_items: int | None = None, expected_groups: int | None = None) -> dict[str, Any]:
+    try:
+        root = ET.fromstring(f"<document>{content}</document>")
+    except ET.ParseError as exc:
+        fail(f"qa_list XML is invalid: {exc}")
+    if any(element.tag not in {"title", "p", "ol", "h2", "table"} for element in root):
+        fail("qa_list supports only source metadata, an episode index/headings and Q&A pairs")
+    if len(root.findall("title")) != 1:
+        fail("qa_list requires exactly one title")
+    source = root.find("p")
+    if source is None or not any(link.get("href", "").startswith(("https://", "http://")) for link in source.iter("a")):
+        fail("qa_list source paragraph needs a video link")
+    groups = root.findall("h2")
+    if expected_groups is not None and len(groups) != expected_groups:
+        fail(f"expected {expected_groups} episode headings, got {len(groups)}")
+    question_re = re.compile(r"^(\d{2}(?:\.\d{2})?)｜Q：(.+)", re.DOTALL)
+    children = list(root)
+    numbers = []
+    for index, element in enumerate(children):
+        if element.tag != "p":
+            continue
+        value = "".join(element.itertext()).strip()
+        question = question_re.fullmatch(value)
+        if question is None:
+            continue
+        if index + 1 >= len(children) or children[index + 1].tag != "p":
+            fail(f"question {question[1]} is missing a separate answer paragraph")
+        answer = "".join(children[index + 1].itertext()).strip()
+        if not answer.startswith("A：") or not answer[2:].strip():
+            fail(f"question {question[1]} has an empty/missing answer")
+        numbers.append(question[1])
+    legacy = root.find("ol")
+    if legacy is not None:
+        if numbers or groups or len(root.findall("ol")) != 1:
+            fail("qa_list mixes incompatible question layouts")
+        items = list(legacy)
+        for index, item in enumerate(items, start=1):
+            value = "".join(item.itertext()).strip()
+            pair = re.fullmatch(r"Q：(.*?)A：(.*)", value, flags=re.DOTALL)
+            if item.tag != "li" or pair is None or not pair[1].strip() or not pair[2].strip():
+                fail(f"legacy qa_list item {index} is missing a question or answer")
+        count = len(items)
+    else:
+        count = len(numbers)
+        answers = [element for element in children if element.tag == "p" and "".join(element.itertext()).strip().startswith("A：")]
+        if len(answers) != count or len(set(numbers)) != count:
+            fail("qa_list has an unmatched answer or duplicate question number")
+    if count < 1 or (expected_items is not None and count != expected_items):
+        fail(f"expected {expected_items or 'non-empty'} Q&A items, got {count}")
+    report = {"profile": "qa_list", "qa_item_count": count, "qa_group_count": len(groups), "source_link_present": True, "separate_question_answer_blocks": legacy is None}
+    report.update(assert_no_quality_leak(content))
+    return report
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate video-summary Feishu presentation XML")
     parser.add_argument("--input", required=True, help="Rendered XML or lark-cli docs +fetch JSON")
     parser.add_argument("--expected-chapters", type=int, default=None)
     parser.add_argument("--expected-whiteboards", type=int, default=None)
+    parser.add_argument("--profile", choices=["summary", "qa_list"], default="summary")
+    parser.add_argument("--expected-qa-items", type=int, default=None)
+    parser.add_argument("--expected-qa-groups", type=int, default=None)
     parser.add_argument("--output", default="", help="Optional JSON report path")
     return parser
 
@@ -217,12 +278,15 @@ def main() -> int:
         fail(f"input does not exist: {path}")
     content = load_content(path)
     report: dict[str, Any] = {"ok": True, "input": str(path)}
-    report.update(assert_top_structure(content))
-    report.update(assert_summary_callout(content))
-    report.update(assert_chapter_metadata(content, args.expected_chapters))
-    report.update(assert_visual_blocks(content, args.expected_whiteboards))
-    report.update(assert_no_quality_leak(content))
-    report.update(assert_no_type_decision_section(content))
+    if args.profile == "qa_list":
+        report.update(assert_qa_list(content, args.expected_qa_items, args.expected_qa_groups))
+    else:
+        report.update(assert_top_structure(content))
+        report.update(assert_summary_callout(content))
+        report.update(assert_chapter_metadata(content, args.expected_chapters))
+        report.update(assert_visual_blocks(content, args.expected_whiteboards))
+        report.update(assert_no_quality_leak(content))
+        report.update(assert_no_type_decision_section(content))
     output = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         Path(args.output).write_text(output + "\n", encoding="utf-8")

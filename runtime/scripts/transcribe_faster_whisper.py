@@ -71,6 +71,45 @@ def select_audio(run_dir: Path, explicit_audio: str | None) -> Path:
     raise SystemExit(f"no audio candidate found under {media_dir}; searched: {searched}")
 
 
+def normalize_segments_to_audio_duration(
+    segments: list[dict[str, Any]], audio_duration: float
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Drop post-audio hallucinations and clip a real final segment to EOF.
+
+    Missing-tail QA must use the normalized final timestamp. Segments that begin
+    at or after the actual audio end contain no source audio and must not trigger
+    an expensive no-VAD retry merely because their hallucinated timestamps extend
+    beyond the file.
+    """
+    normalized: list[dict[str, Any]] = []
+    discarded_after_audio = 0
+    clipped_to_audio = 0
+    raw_last_end = max((float(segment["end"]) for segment in segments), default=0.0)
+
+    for segment in segments:
+        start = float(segment["start"])
+        end = float(segment["end"])
+        if start >= audio_duration:
+            discarded_after_audio += 1
+            continue
+        item = dict(segment)
+        if end > audio_duration:
+            item["end"] = audio_duration
+            clipped_to_audio += 1
+        normalized.append(item)
+
+    normalized_last_end = float(normalized[-1]["end"]) if normalized else 0.0
+    stats = {
+        "raw_segment_count": len(segments),
+        "raw_last_segment_end": raw_last_end,
+        "discarded_after_audio_segments": discarded_after_audio,
+        "clipped_to_audio_segments": clipped_to_audio,
+        "normalized_segment_count": len(normalized),
+        "normalized_last_segment_end": normalized_last_end,
+    }
+    return normalized, stats
+
+
 def try_import_faster_whisper() -> Any:
     try:
         from faster_whisper import WhisperModel  # type: ignore[import-not-found]
@@ -137,12 +176,12 @@ def transcribe_attempt(
             kwargs[key] = value
 
     segments_iter, info = model.transcribe(str(audio), **kwargs)
-    segments: list[dict[str, Any]] = []
+    raw_segments: list[dict[str, Any]] = []
     for segment in segments_iter:
         text = " ".join(segment.text.split())
         if not text:
             continue
-        segments.append(
+        raw_segments.append(
             {
                 "id": segment.id,
                 "start": float(segment.start),
@@ -151,8 +190,9 @@ def transcribe_attempt(
             }
         )
 
+    segments, boundary_stats = normalize_segments_to_audio_duration(raw_segments, audio_duration)
     last_end = segments[-1]["end"] if segments else 0.0
-    drift = abs(audio_duration - last_end)
+    drift = max(audio_duration - last_end, 0.0)
     drift_pct = drift / audio_duration * 100 if audio_duration else None
     qa = {
         "ok": bool(segments)
@@ -167,6 +207,7 @@ def transcribe_attempt(
         "audio_duration": audio_duration,
         "segment_count": len(segments),
         "last_segment_end": last_end,
+        **boundary_stats,
         "coverage_drift_seconds": drift,
         "coverage_drift_pct": drift_pct,
         "threshold_pct": threshold_pct,

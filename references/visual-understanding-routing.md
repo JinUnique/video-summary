@@ -12,16 +12,16 @@ Source of truth:
 
 - downloaded run media;
 - chapter time windows;
-- `scripts/select_frame_evidence.py`;
+- `runtime/scripts/select_frame_evidence.py`;
 - local `ffmpeg` / `ffprobe` extraction;
 - local pixel statistics and optional local OCR;
 - `frames/frame_evidence.json`.
 
 This layer must stay reproducible. It should not depend on any remote VLM, current chat model, provider quota, or subjective interpretation. Keep `frame_evidence.json.remote_vision_used` as `false` to mean “frame selection did not depend on remote vision.”
 
-### 2. Understanding Layer — Hermes `vision_analyze` by default when useful
+### 2. Understanding Layer — assistant image inspection by default when useful
 
-After deterministic frame evidence exists, use Hermes built-in `vision_analyze` as the preferred visual-understanding helper when the video’s value depends on visual details that transcript/OCR cannot fully capture.
+After deterministic frame evidence exists, use the assistant’s available image-inspection tool as the preferred visual-understanding helper when the video’s value depends on visual details that transcript/OCR cannot fully capture.
 
 Good triggers:
 
@@ -47,7 +47,7 @@ Analyze this selected video frame for a video-summary run. Focus only on visible
 
 ### 3. Fallback Layer — local OCR / local VLM / manual skim
 
-Use local routes when `vision_analyze` is unavailable, too costly for the current task, privacy-sensitive, or not needed.
+Use local routes when assistant image inspection is unavailable, too costly for the current task, privacy-sensitive, or not needed.
 
 Fallback order:
 
@@ -77,7 +77,7 @@ When model-assisted visual understanding is used, record at least:
 ```json
 {
   "mode": "visual_understanding_notes",
-  "provider_route": "vision_analyze | local_vlm | manual",
+  "provider_route": "assistant_image_tool | local_vlm | manual",
   "depends_on_frame_evidence": true,
   "frames": [
     {

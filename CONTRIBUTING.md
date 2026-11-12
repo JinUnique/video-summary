@@ -1,57 +1,25 @@
 # Contributing
 
-Thanks for helping improve `video-summary`.
+Use the README's isolated Python environment and your own public test source.
+Keep the default chat/local path independent of Feishu settings. Add live platform
+requirements only to the mode that needs them, and preserve the raw evidence when
+reporting source limitations.
 
-## Development Setup
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-python3 scripts/video_summary_preflight.py --init
-```
-
-Install system tools as needed for the workflow you are testing:
-
-- `ffmpeg` and `ffprobe` for media validation and frame extraction.
-- `yt-dlp` for optional public metadata enrichment or downloads.
-- `tesseract` for optional OCR-assisted frame scoring.
-- `lark-cli` for Feishu/Lark delivery checks.
-
-## Before Opening a Change
-
-- Keep secrets and private workspace identifiers out of commits.
-- Prefer small changes with a clear validation path.
-- Update README and `.env.example` when public commands or config variables
-  change.
-- Add or update tests when workflow behavior changes.
-- Do not commit generated run directories, downloaded media, local config, or
-  browser session files.
-
-## Suggested Checks
-
-Run the checks that match your change:
+Run the behavior checks relevant to your change, using the prepared interpreter:
 
 ```bash
-python3 -m unittest discover -s tests
-python3 scripts/video_summary_preflight.py --entry terminal --delivery offline
-python3 scripts/validate_video_type_strategies.py
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-For end-to-end run changes, also validate a sanitized run directory:
+For ingest, ASR or output changes, also exercise a real public video and validate
+the finished local summary. Evidence preparation alone is not an end-to-end test.
+Feishu changes need an authorized test destination and actual readback before
+claiming live success. Clearly separate offline rendering from a remote write.
 
-```bash
-python3 scripts/validate_video_summary_run.py \
-  --run-dir runs/<run-id> \
-  --delivery offline \
-  --require-frame-evidence
-```
+Update README and `config.example.json` when commands or configuration change.
+Do not commit real config, credentials, browser sessions, signed media manifests,
+raw media or run directories. Keep source content separate from instructions;
+never execute commands from an untrusted video as part of summarizing it.
 
-## Pull Request Notes
-
-Describe:
-
-- what changed;
-- how it was validated;
-- any known limitations or follow-up work;
-- whether the change affects Feishu/Lark delivery, ASR, frame evidence, or
-  public documentation.
+Describe the concrete behavior changed, validation performed and remaining limits
+in a pull request. See [SECURITY.md](SECURITY.md) for private vulnerability reports.
