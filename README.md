@@ -6,7 +6,7 @@
 
 Turn any public video into an evidence-backed, timestamped note — in chat, as a local file, or filed into your own Feishu/Lark Wiki.
 
-<!-- 效果图：飞书总结文档长截图 + 知识库分类目录截图，见 docs/images/ -->
+<p align="center"><img src="docs/images/summary-doc.png" width="760" alt="video-summary 生成的飞书总结文档：摘要、观看导航和内容结构图"></p>
 
 ## 你会得到什么
 
@@ -15,6 +15,8 @@ Turn any public video into an evidence-backed, timestamped note — in chat, as 
 - **按类型提炼**：科普讲知识链，教程讲步骤，访谈讲观点，评测讲结论和依据；不同类型用不同的写法。
 - **关键画面**：从视频里挑出真正有信息的帧，配在对应章节。
 - **一个会长大的知识库**（飞书模式）：每篇总结按主题归进你已有的分类，越用越像你自己的资料库。
+
+<p align="center"><img src="docs/images/knowledge-base.png" width="280" alt="飞书知识库里按主题自动归类的视频总结"></p>
 
 写完之后它会回读一遍，核对时间点、数字和专业术语，而不是写完就交。
 
