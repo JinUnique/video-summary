@@ -6,6 +6,8 @@
 
 Turn any public video into an evidence-backed, timestamped note — in chat, as a local file, or filed into your own Feishu/Lark Wiki.
 
+[看云狸Jin 的 78 秒演示（B 站）](https://www.bilibili.com/video/BV1A7sb6DEpq/)
+
 <p align="center"><img src="docs/images/summary-doc.png" width="760" alt="video-summary 生成的飞书总结文档：摘要、观看导航和内容结构图"></p>
 
 ## 你会得到什么
